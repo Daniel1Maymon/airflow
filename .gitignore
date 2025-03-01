@@ -1,0 +1,34 @@
+# Python files and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+*.dist-info/
+
+# Virtual environments
+venv/
+.env/
+airflow_venv/
+
+# Logs and temporary files
+logs/
+*.log
+*.pid
+*.csv
+
+# Docker files (override or debug files only if needed)
+docker-compose.override.yml
+
+# Airflow database and PID files
+airflow/
+airflow-webserver.pid
+
+# Postgres data (or any other database folder)
+postgres_data/
+
+# Ignore OS-specific clutter
+.DS_Store
+Thumbs.db
