@@ -12,12 +12,16 @@ __pycache__/
 venv/
 .env/
 airflow_venv/
+*.env
 
 # Logs and temporary files
 logs/
 *.log
 *.pid
 *.csv
+*.err
+*.log
+*.out
 
 # Docker files (override or debug files only if needed)
 docker-compose.override.yml
