@@ -46,8 +46,8 @@ def extract_task():
     print(records)
     print("---- END records ----")
 
-    # if records:
-    #     extracted_collection.insert_many(records)  # Save data to new collection
+    if records:
+        extracted_collection.insert_many(records)  # Save data to new collection
 
     client.close()
     logging.info("Extraction complete. Data saved in MongoDB.")
