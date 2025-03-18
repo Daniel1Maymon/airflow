@@ -53,6 +53,7 @@ def extract_task():
     logging.info("Extraction complete. Data saved in MongoDB.")
 
 def transform_task():
+    print("##### TRANSFORM TASK #####")
     """Transforms extracted data into SQLModel objects and saves in 'etl_transformed'."""
     logging.info("Starting data transformation...")
 
@@ -64,18 +65,28 @@ def transform_task():
 
     records = list(extracted_collection.find())
 
+    print("---- records ----")
+    print(records)
+    print("---- END records ----")
+
     if not records:
         logging.warning("No data to transform.")
         client.close()
         return
 
     transformed_data = transform_data(records)  # Transform the extracted data
+    print("---- transformed_data ----")
+    print(transformed_data)
+    print("---- END transformed_data ----")
 
     # Convert SQLModel objects to dictionaries before saving in MongoDB
+    print("Convert SQLModel objects to dictionaries before saving in MongoDB...")
     transformed_collection.insert_many([obj.model_dump() for obj in transformed_data])
 
     client.close()
     logging.info("Transformation complete. Data saved in MongoDB.")
+
+    print("##### END - TRANSFORM TASK #####")
 
 def load_task():
     """Loads transformed data from MongoDB into PostgreSQL."""

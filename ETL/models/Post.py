@@ -15,3 +15,7 @@ class Post(SQLModel, table=True):
 
     def __repr__(self):
         return f'<Post {self.id} - {self.content[:20]}...>'
+    
+    def model_dump(self):
+        # Convert the SQLModel object to a dictionary
+        return self.dict()

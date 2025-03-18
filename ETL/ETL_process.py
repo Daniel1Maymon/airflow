@@ -61,6 +61,7 @@ def extract_data(mongo_url: str=MONGO_URL, limit: int = 20) -> list:
         logging.info("MongoDB connection closed.")
 
 def transform_data(data: list) -> list:
+    import pandas as pd
 
     # Convert list of dictionaries into a DataFrame
     df = pd.DataFrame(data)
@@ -69,7 +70,7 @@ def transform_data(data: list) -> list:
     df[['price', 'rooms', 'size']] = df['content'].apply(lambda x: pd.Series(extract_rental_info(x)))
 
     # Keep only the relevant columns
-    df = df[['content', 'rooms', 'size', 'price']]
+    df = df[['content', 'link', 'rooms', 'size', 'price']]  # Added 'link'
 
     # Convert each row of the DataFrame into a SQLModel object
     processed_data = []
@@ -79,9 +80,8 @@ def transform_data(data: list) -> list:
         row_data["mongo_id"] = str(data[i]["_id"])  # Store MongoDB _id in mongo_id field
 
         # Replace NaN values with None
-        row_data["rooms"] = None if pd.isna(row_data.get("rooms")) else row_data.get("rooms")
-        row_data["size"] = None if pd.isna(row_data.get("size")) else row_data.get("size")
-        row_data["price"] = None if pd.isna(row_data.get("price")) else row_data.get("price")
+        for key in ['rooms', 'size', 'price']:
+            row_data[key] = None if pd.isna(row_data.get(key)) else row_data.get(key)
 
         # Create a Post object from the row data
         processed_data.append(Post(**row_data))
