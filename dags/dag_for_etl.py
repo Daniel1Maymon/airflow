@@ -6,6 +6,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from pymongo import MongoClient
 from sqlmodel import create_engine
+from pymongo import errors
 
 # Adjusting the system path for ETL imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -46,11 +47,27 @@ def extract_task():
     print(records)
     print("---- END records ----")
 
-    if records:
-        extracted_collection.insert_many(records)  # Save data to new collection
+    # Extract _id values from incoming records
+    new_ids = [record["_id"] for record in records]
 
-    client.close()
-    logging.info("Extraction complete. Data saved in MongoDB.")
+    # Query MongoDB for existing _id values in etl_extracted
+    existing_docs = extracted_collection.find(
+        {"_id": {"$in": new_ids}}, 
+        {"_id": 1})
+    existing_ids = {doc["_id"] for doc in existing_docs}
+
+    # Filter out records with existing _id
+    filtered_records = [record for record in records if record["_id"] not in existing_ids]
+
+    # Insert only new records
+    if filtered_records:
+        try:
+            extracted_collection.insert_many(filtered_records, ordered=False)
+        except errors.BulkWriteError as e:
+            # Ignore duplicate key errors (document already exists)
+            pass
+        client.close()
+        logging.info("Extraction complete. Data saved in MongoDB.")
 
 def transform_task():
     print("##### TRANSFORM TASK #####")
@@ -65,23 +82,37 @@ def transform_task():
 
     records = list(extracted_collection.find())
 
-    print("---- records ----")
-    print(records)
-    print("---- END records ----")
-
     if not records:
         logging.warning("No data to transform.")
         client.close()
         return
 
-    transformed_data = transform_data(records)  # Transform the extracted data
-    print("---- transformed_data ----")
-    print(transformed_data)
-    print("---- END transformed_data ----")
+    # Extract _id values from extracted records
+    new_ids = [record["_id"] for record in records]
 
-    # Convert SQLModel objects to dictionaries before saving in MongoDB
-    print("Convert SQLModel objects to dictionaries before saving in MongoDB...")
-    transformed_collection.insert_many([obj.model_dump() for obj in transformed_data])
+    # Find which _id values already exist in etl_transformed
+    existing_docs = transformed_collection.find(
+        {"_id": {"$in": new_ids}}, 
+        {"_id": 1}
+    )
+    existing_ids = {doc["_id"] for doc in existing_docs}
+
+    # Filter out records that already exist
+    filtered_records = [record for record in records if record["_id"] not in existing_ids]
+
+    if not filtered_records:
+        logging.info("No new records to transform.")
+        client.close()
+        return
+
+    # Transform only the filtered records
+    transformed_data = transform_data(filtered_records)
+
+    # Insert into etl_transformed with original _id preserved
+    try:
+        transformed_collection.insert_many([obj.model_dump() for obj in transformed_data], ordered=False)
+    except errors.BulkWriteError:
+        pass  # Ignore duplicates just in case
 
     client.close()
     logging.info("Transformation complete. Data saved in MongoDB.")
@@ -131,9 +162,9 @@ with DAG(
         python_callable=transform_task
     )
 
-    load = PythonOperator(
-        task_id='load',
-        python_callable=load_task
-    )
-    extract
+    # load = PythonOperator(
+    #     task_id='load',
+    #     python_callable=load_task
+    # )
+    extract >> transform
     # extract >> transform >> load

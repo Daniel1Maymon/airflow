@@ -35,7 +35,7 @@ from utils.regex_extractor import extract_rental_info
 from ETL.models.Post import Post
 
 
-def extract_data(mongo_url: str=MONGO_URL, limit: int = 20) -> list:
+def extract_data(mongo_url: str=MONGO_URL, limit: int = 3) -> list:
     """Extract data from MongoDB and return a list of dictionaries."""
     try:
         # Connect to MongoDB
