@@ -88,7 +88,6 @@ def transform_data(data: list) -> list:
 
     return processed_data
 
-
 def insert_data(engine, data: list):
     """Load - Insert processed SQLModel objects into PostgreSQL using ON CONFLICT DO NOTHING."""
     logging.info(f"Attempting to insert {len(data)} records into PostgreSQL.")  # Log the number of records to insert
@@ -119,22 +118,15 @@ def insert_data(engine, data: list):
         logging.error(f"PostgreSQL insertion failed: {e}")  # Log any exception that occurs
         raise  # Re-raise the exception to propagate the error
 
-
-
-    
-
 def connect_to_postgres(postgres_url: str=MONGO_URL):
     """Connect to PostgreSQL using SQLAlchemy and return the engine."""
     engine = create_engine(postgres_url)
     return engine
 
-
 def create_table(engine):
     """Create tables based on SQLModel definitions"""
     SQLModel.metadata.create_all(engine)
     print("Table created successfully!")
-
-
 
 if __name__ == "__main__":
     # Configure logging
