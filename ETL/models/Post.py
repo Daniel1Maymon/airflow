@@ -3,9 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 class Post(SQLModel, table=True):
-    __tablename__ = 'posts'
-
-    id: int = Field(primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     mongo_id: Optional[str] = Field(default=None, unique=True)
     content: str
     rooms: Optional[float] = None
@@ -15,7 +13,6 @@ class Post(SQLModel, table=True):
 
     def __repr__(self):
         return f'<Post {self.id} - {self.content[:20]}...>'
-    
-    def model_dump(self):
-        # Convert the SQLModel object to a dictionary
+
+    def to_dict(self):
         return self.dict()
